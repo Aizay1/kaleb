@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUXVERIS - News & Courses Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --secondary: #7c3aed;
+            --dark: #1e293b;
+            --light: #f8fafc;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f5f9;
+            color: #334155;
+        }
+        
+        .news-card:hover .news-image {
+            transform: scale(1.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .news-image {
+            transition: transform 0.3s ease;
+        }
+        
+        .admin-panel {
+            display: none;
+        }
+        
+        .admin-panel.active {
+            display: block;
+        }
+        
+        .user-view {
+            display: block;
+        }
+        
+        .user-view.hidden {
+            display: none;
+        }
+        
+        #imagePreviewContainer {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .preview-image {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 5px;
+            position: relative;
+        }
+        
+        .remove-image {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: red;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .paragraph-container {
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .remove-paragraph {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: red;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        /* Animation for news cards */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .news-card {
+            animation: fadeIn 0.5s ease forwards;
+            opacity: 0;
+        }
+        
+        .news-card:nth-child(1) { animation-delay: 0.1s; }
+        .news-card:nth-child(2) { animation-delay: 0.2s; }
+        .news-card:nth-child(3) { animation-delay: 0.3s; }
+        .news-card:nth-child(4) { animation-delay: 0.4s; }
+        .news-card:nth-child(5) { animation-delay: 0.5s; }
+        
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .course-card:hover {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .hero-gradient {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+        
+        .nav-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .stat-card:hover {
+            transform: scale(1.03);
+        }
+        
+        .modal-content {
+            animation: modalFadeIn 0.3s ease-out;
+        }
+        
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .tab-active {
+            background-color: #e0e7ff;
+            color: var(--primary);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Navigation -->
+    <nav class="bg-indigo-900 text-white shadow-lg nav-shadow">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-newspaper text-2xl"></i>
+                <h1 class="text-2xl font-bold">LUXVERIS</h1>
+            </div>
+            <div class="hidden md:flex space-x-6">
+                <a href="#" class="hover:text-indigo-300 transition">Home</a>
+                <a href="#" class="hover:text-indigo-300 transition">News</a>
+                <a href="#" class="hover:text-indigo-300 transition">Courses</a>
+                <a href="#" class="hover:text-indigo-300 transition">About</a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="adminLoginBtn" class="bg-indigo-700 hover:bg-indigo-600 px-4 py-2 rounded-lg transition">
+                    Admin Login
+                </button>
+                <button id="logoutBtn" class="hidden bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg transition">
+                    Logout
+                </button>
+                <button class="md:hidden" id="mobileMenuBtn">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Mobile menu -->
+        <div id="mobileMenu" class="md:hidden hidden bg-indigo-800 px-4 py-2">
+            <a href="#" class="block py-2 hover:text-indigo-300 transition">Home</a>
+            <a href="#" class="block py-2 hover:text-indigo-300 transition">News</a>
+            <a href="#" class="block py-2 hover:text-indigo-300 transition">Courses</a>
+            <a href="#" class="block py-2 hover:text-indigo-300 transition">About</a>
+        </div>
+    </nav>
+
+    <!-- Admin Login Modal -->
+    <div id="adminLoginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-indigo-900">Admin Login</h2>
+                <button id="closeLoginModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="loginForm">
+                <div class="mb-4">
+                    <label for="username" class="block text-gray-700 mb-2">Username</label>
+                    <input type="text" id="username" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                </div>
+                <div class="mb-6">
+                    <label for="password" class="block text-gray-700 mb-2">Password</label>
+                    <input type="password" id="password" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                </div>
+                <button type="submit" class="w-full bg-indigo-700 hover:bg-indigo-600 text-white py-2 rounded-lg transition">
+                    Login
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Content - User View -->
+    <div id="userView" class="user-view container mx-auto px-4 py-8">
+        <!-- Hero Section -->
+        <section class="hero-gradient rounded-2xl p-8 text-white mb-10">
+            <div class="max-w-3xl mx-auto text-center">
+                <h2 class="text-4xl font-bold mb-4">Welcome to LUXVERIS</h2>
+                <p class="text-xl mb-6">Your daily source for news, courses, and knowledge</p>
+                <div class="flex justify-center space-x-4">
+                    <button class="bg-white text-indigo-700 hover:bg-gray-100 px-6 py-3 rounded-lg font-semibold transition transform hover:scale-105">
+                        Explore News
+                    </button>
+                    <button class="border-2 border-white hover:bg-white hover:text-indigo-700 px-6 py-3 rounded-lg font-semibold transition transform hover:scale-105">
+                        View Courses
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- News Categories -->
+        <section class="mb-10">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">News Categories</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="category-card bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition cursor-pointer duration-300">
+                    <i class="fas fa-graduation-cap text-4xl text-indigo-600 mb-3"></i>
+                    <h3 class="font-semibold text-gray-800">Education</h3>
+                </div>
+                <div class="category-card bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition cursor-pointer duration-300">
+                    <i class="fas fa-briefcase text-4xl text-blue-600 mb-3"></i>
+                    <h3 class="font-semibold text-gray-800">Business</h3>
+                </div>
+                <div class="category-card bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition cursor-pointer duration-300">
+                    <i class="fas fa-flask text-4xl text-green-600 mb-3"></i>
+                    <h3 class="font-semibold text-gray-800">Science</h3>
+                </div>
+                <div class="category-card bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition cursor-pointer duration-300">
+                    <i class="fas fa-heartbeat text-4xl text-red-600 mb-3"></i>
+                    <h3 class="font-semibold text-gray-800">Health</h3>
+                </div>
+            </div>
+        </section>
+
+        <!-- Latest News -->
+        <section class="mb-10">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Latest News</h2>
+                <a href="#" class="text-indigo-700 hover:text-indigo-500 font-semibold">View All</a>
+            </div>
+            <div id="newsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- News cards will be dynamically inserted here -->
+            </div>
+        </section>
+
+        <!-- Featured Courses -->
+        <section class="mb-10">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Featured Courses</h2>
+                <a href="#" class="text-indigo-700 hover:text-indigo-500 font-semibold">View All</a>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="course-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
+                    <img src="https://images.unsplash.com/photo-1542626991-cbc4e32524cc?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" alt="Course" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-xl font-bold text-gray-800">Web Development Masterclass</h3>
+                            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">New</span>
+                        </div>
+                        <p class="text-gray-600 mb-4">Learn modern web development with HTML, CSS, JavaScript and frameworks.</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-indigo-700 font-semibold">$199.99</span>
+                            <a href="#" class="bg-indigo-700 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition">Enroll Now</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="course-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
+                    <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" alt="Course" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-xl font-bold text-gray-800">Data Science Fundamentals</h3>
+                            <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Popular</span>
+                        </div>
+                        <p class="text-gray-600 mb-4">Master the basics of data analysis, visualization, and machine learning.</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-indigo-700 font-semibold">$249.99</span>
+                            <a href="#" class="bg-indigo-700 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition">Enroll Now</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="course-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
+                    <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" alt="Course" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-xl font-bold text-gray-800">Digital Marketing Strategy</h3>
+                            <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">Trending</span>
+                        </div>
+                        <p class="text-gray-600 mb-4">Learn how to create effective digital marketing campaigns that convert.</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-indigo-700 font-semibold">$179.99</span>
+                            <a href="#" class="bg-indigo-700 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition">Enroll Now</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="adminPanel" class="admin-panel container mx-auto px-4 py-8">
+        <div class="flex flex-col md:flex-row gap-8">
+            <!-- Sidebar -->
+            <div class="md:w-1/4 bg-white rounded-lg shadow-md p-6 h-fit">
+                <div class="flex items-center mb-8">
+                    <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center mr-3">
+                        <i class="fas fa-user-shield text-indigo-700 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-800">Admin Dashboard</h3>
+                        <p class="text-sm text-gray-600">Welcome back, Admin!</p>
+                    </div>
+                </div>
+                <nav>
+                    <ul class="space-y-2">
+                        <li>
+                            <button id="dashboardTab" class="w-full text-left px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg font-medium tab-active">
+                                <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
+                            </button>
+                        </li>
+                        <li>
+                            <button id="createNewsTab" class="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-lg transition">
+                                <i class="fas fa-plus-circle mr-2"></i> Create News
+                            </button>
+                        </li>
+                        <li>
+                            <button id="manageNewsTab" class="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-lg transition">
+                                <i class="fas fa-newspaper mr-2"></i> Manage News
+                            </button>
+                        </li>
+                        <li>
+                            <button id="analyticsTab" class="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-lg transition">
+                                <i class="fas fa-chart-line mr-2"></i> Analytics
+                            </button>
+                        </li>
+                        <li>
+                            <button id="settingsTab" class="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-lg transition">
+                                <i class="fas fa-cog mr-2"></i> Settings
+                            </button>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="md:w-3/4">
+                <!-- Dashboard Tab -->
+                <div id="dashboardContent" class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Admin Dashboard</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="stat-card bg-indigo-50 rounded-lg p-6 transition duration-300">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="text-gray-600 font-medium">Total News</h3>
+                                    <p class="text-3xl font-bold text-indigo-700" id="totalNewsCount">24</p>
+                                </div>
+                                <div class="bg-indigo-100 p-3 rounded-lg">
+                                    <i class="fas fa-newspaper text-indigo-700"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-card bg-green-50 rounded-lg p-6 transition duration-300">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="text-gray-600 font-medium">Active Courses</h3>
+                                    <p class="text-3xl font-bold text-green-700">8</p>
+                                </div>
+                                <div class="bg-green-100 p-3 rounded-lg">
+                                    <i class="fas fa-graduation-cap text-green-700"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-card bg-blue-50 rounded-lg p-6 transition duration-300">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="text-gray-600 font-medium">Visitors Today</h3>
+                                    <p class="text-3xl font-bold text-blue-700">1,245</p>
+                                </div>
+                                <div class="bg-blue-100 p-3 rounded-lg">
+                                    <i class="fas fa-users text-blue-700"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Activity</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <div class="bg-indigo-100 p-2 rounded-lg mr-4">
+                                    <i class="fas fa-plus text-indigo-700"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium">You published a new article</p>
+                                    <p class="text-sm text-gray-600">"Web Development Trends 2023"</p>
+                                    <p class="text-xs text-gray-500">2 hours ago</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="bg-green-100 p-2 rounded-lg mr-4">
+                                    <i class="fas fa-edit text-green-700"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium">You updated a course</p>
+                                    <p class="text-sm text-gray-600">"Data Science Fundamentals"</p>
+                                    <p class="text-xs text-gray-500">5 hours ago</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="bg-blue-100 p-2 rounded-lg mr-4">
+                                    <i class="fas fa-user-plus text-blue-700"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium">New user registered</p>
+                                    <p class="text-sm text-gray-600">john.doe@example.com</p>
+                                    <p class="text-xs text-gray-500">Yesterday</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Create News Tab -->
+                <div id="createNewsContent" class="bg-white rounded-lg shadow-md p-6 hidden">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Create News Article</h2>
+                    <form id="newsForm">
+                        <div class="mb-6">
+                            <label for="newsTitle" class="block text-gray-700 font-medium mb-2">Title</label>
+                            <input type="text" id="newsTitle" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                        </div>
+                        <div class="mb-6">
+                            <label for="newsCategory" class="block text-gray-700 font-medium mb-2">Category</label>
+                            <select id="newsCategory" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="education">Education</option>
+                                <option value="business">Business</option>
+                                <option value="science">Science</option>
+                                <option value="health">Health</option>
+                                <option value="technology">Technology</option>
+                            </select>
+                        </div>
+                        <div class="mb-6">
+                            <label for="newsImages" class="block text-gray-700 font-medium mb-2">Images</label>
+                            <input type="file" id="newsImages" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" multiple>
+                            <div id="imagePreviewContainer" class="mt-4"></div>
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-gray-700 font-medium mb-2">Content</label>
+                            <div id="paragraphsContainer">
+                                <div class="paragraph-container">
+                                    <textarea class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-2" placeholder="Write a paragraph..."></textarea>
+                                </div>
+                            </div>
+                            <button type="button" id="addParagraphBtn" class="mt-2 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg transition">
+                                <i class="fas fa-plus mr-2"></i>Add Paragraph
+                            </button>
+                        </div>
+                        <div class="mb-6">
+                            <label for="courseLink" class="block text-gray-700 font-medium mb-2">Course Link (Optional)</label>
+                            <input type="url" id="courseLink" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="https://example.com/enroll">
+                        </div>
+                        <div class="mb-6">
+                            <label for="linkText" class="block text-gray-700 font-medium mb-2">Link Text (Optional)</label>
+                            <input type="text" id="linkText" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Enroll Now">
+                        </div>
+                        <div class="flex justify-end space-x-4">
+                            <button type="button" id="previewBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-2 rounded-lg transition">
+                                Preview
+                            </button>
+                            <button type="submit" class="bg-indigo-700 hover:bg-indigo-600 text-white px-6 py-2 rounded-lg transition">
+                                Publish
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Manage News Tab -->
+                <div id="manageNewsContent" class="bg-white rounded-lg shadow-md p-6 hidden">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Manage News</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="py-3 px-4 text-left">Title</th>
+                                    <th class="py-3 px-4 text-left">Category</th>
+                                    <th class="py-3 px-4 text-left">Date</th>
+                                    <th class="py-3 px-4 text-left">Status</th>
+                                    <th class="py-3 px-4 text-left">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="newsTableBody">
+                                <!-- News items will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Analytics Tab -->
+                <div id="analyticsContent" class="bg-white rounded-lg shadow-md p-6 hidden">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Analytics</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white border border-gray-200 rounded-lg p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Visitors</h3>
+                            <div class="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+                                <p class="text-gray-500">Visitor chart would appear here</p>
+                            </div>
+                        </div>
+                        <div class="bg-white border border-gray-200 rounded-lg p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Top Articles</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <p class="font-medium">Web Development Trends 2023</p>
+                                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                        <div class="bg-indigo-600 h-2.5 rounded-full" style="width: 85%"></div>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-1">1,245 views</p>
+                                </div>
+                                <div>
+                                    <p class="font-medium">Data Science Career Guide</p>
+                                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                        <div class="bg-indigo-600 h-2.5 rounded-full" style="width: 72%"></div>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-1">987 views</p>
+                                </div>
+                                <div>
+                                    <p class="font-medium">Healthy Eating Habits</p>
+                                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                        <div class="bg-indigo-600 h-2.5 rounded-full" style="width: 65%"></div>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-1">845 views</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Course Enrollment</h3>
+                        <div class="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+                            <p class="text-gray-500">Enrollment chart would appear here</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Tab -->
+                <div id="settingsContent" class="bg-white rounded-lg shadow-md p-6 hidden">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Settings</h2>
+                    <form id="settingsForm">
+                        <div class="mb-6">
+                            <label for="siteName" class="block text-gray-700 font-medium mb-2">Site Name</label>
+                            <input type="text" id="siteName" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" value="LUXVERIS">
+                        </div>
+                        <div class="mb-6">
+                            <label for="siteDescription" class="block text-gray-700 font-medium mb-2">Site Description</label>
+                            <textarea id="siteDescription" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" rows="3">Your daily page for news and courses</textarea>
+                        </div>
+                        <div class="mb-6">
+                            <label for="adminEmail" class="block text-gray-700 font-medium mb-2">Admin Email</label>
+                            <input type="email" id="adminEmail" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" value="admin@luxveris.com">
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-gray-700 font-medium mb-2">Site Theme</label>
+                            <div class="flex space-x-4">
+                                <div class="flex items-center">
+                                    <input id="theme-light" name="theme" type="radio" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500" checked>
+                                    <label for="theme-light" class="ml-2 block text-gray-700">Light</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input id="theme-dark" name="theme" type="radio" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500">
+                                    <label for="theme-dark" class="ml-2 block text-gray-700">Dark</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="submit" class="bg-indigo-700 hover:bg-indigo-600 text-white px-6 py-2 rounded-lg transition">
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">LUXVERIS</h3>
+                    <p class="text-gray-400">Your daily source for news, courses, and knowledge to empower your life.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Quick Links</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Home</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">News</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Courses</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">About Us</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Categories</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Education</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Business</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Science</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Health</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Subscribe</h4>
+                    <p class="text-gray-400 mb-4">Stay updated with our latest news and courses.</p>
+                    <form class="flex">
+                        <input type="email" placeholder="Your email" class="px-4 py-2 rounded-l-lg focus:outline-none text-gray-800 w-full">
+                        <button type="submit" class="bg-indigo-700 hover:bg-indigo-600 px-4 py-2 rounded-r-lg transition">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2023 LUXVERIS. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Preview Modal -->
+    <div id="previewModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden overflow-y-auto">
+        <div class="bg-white rounded-xl p-6 w-full max-w-4xl max-h-screen overflow-y-auto modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-indigo-900">Article Preview</h2>
+                <button id="closePreviewModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="previewContent" class="prose max-w-none">
+                <!-- Preview content will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample news data
+        const newsData = [
+            {
+                id: 1,
+                title: "Web Development Trends in 2023",
+                category: "technology",
+                date: "2023-06-15",
+                images: [
+                    "https://images.unsplash.com/photo-1547658719-da2b51169166?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
+                ],
+                paragraphs: [
+                    "The web development landscape continues to evolve at a rapid pace. In 2023, we're seeing several key trends emerge that are shaping how developers build modern web applications.",
+                    "One of the most significant trends is the rise of serverless architectures. By abstracting away server management, developers can focus more on writing code and less on infrastructure concerns. Platforms like AWS Lambda, Azure Functions, and Google Cloud Functions are making this approach more accessible than ever.",
+                    "Another important trend is the continued dominance of JavaScript frameworks, particularly React, Vue, and Angular. However, we're also seeing growing interest in newer frameworks like Svelte and Solid.js that offer different approaches to building user interfaces."
+                ],
+                courseLink: "https://example.com/web-dev-course",
+                linkText: "Enroll in Web Dev Course"
+            },
+            {
+                id: 2,
+                title: "The Future of Artificial Intelligence in Healthcare",
+                category: "health",
+                date: "2023-06-10",
+                images: [
+                    "https://images.unsplash.com/photo-1579684385127-1ef15d508118?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+                    "https://images.unsplash.com/photo-1579165466749-4246e0b44893?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
+                ],
+                paragraphs: [
+                    "Artificial intelligence is transforming the healthcare industry in profound ways. From diagnostic tools to personalized treatment plans, AI is helping medical professionals provide better care to patients.",
+                    "One of the most promising applications is in medical imaging. AI algorithms can now detect anomalies in X-rays, MRIs, and CT scans with accuracy that rivals or even exceeds human radiologists. This technology is particularly valuable in areas with limited access to specialist care.",
+                    "Another area where AI is making an impact is in drug discovery. Machine learning models can analyze vast amounts of chemical and biological data to identify potential new drug candidates much faster than traditional methods."
+                ],
+                courseLink: "",
+                linkText: ""
+            },
+            {
+                id: 3,
+                title: "Sustainable Business Practices for the Modern Enterprise",
+                category: "business",
+                date: "2023-06-05",
+                images: [
+                    "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
+                ],
+                paragraphs: [
+                    "As climate change becomes an increasingly urgent issue, businesses of all sizes are recognizing the need to adopt more sustainable practices. This isn't just good for the planet—it's also good for business.",
+                    "Consumers are increasingly making purchasing decisions based on a company's environmental impact. A recent survey found that 66% of consumers are willing to pay more for sustainable products. This shift in consumer behavior is driving companies to rethink their operations.",
+                    "Some of the most effective sustainable practices include reducing energy consumption through efficiency measures, transitioning to renewable energy sources, implementing circular economy principles to minimize waste, and choosing sustainable suppliers throughout the supply chain."
+                ],
+                courseLink: "https://example.com/sustainability-course",
+                linkText: "Learn Sustainable Practices"
+            }
+        ];
+
+        // DOM elements
+        const adminLoginBtn = document.getElementById('adminLoginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const adminLoginModal = document.getElementById('adminLoginModal');
+        const closeLoginModal = document.getElementById('closeLoginModal');
+        const loginForm = document.getElementById('loginForm');
+        const adminPanel = document.getElementById('adminPanel');
+        const userView = document.getElementById('userView');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const newsContainer = document.getElementById('newsContainer');
+        const newsTableBody = document.getElementById('newsTableBody');
+        const totalNewsCount = document.getElementById('totalNewsCount');
+        
+        // Admin panel tabs
+        const dashboardTab = document.getElementById('dashboardTab');
+        const createNewsTab = document.getElementById('createNewsTab');
+        const manageNewsTab = document.getElementById('manageNewsTab');
+        const analyticsTab = document.getElementById('analyticsTab');
+        const settingsTab = document.getElementById('settingsTab');
+        
+        // Admin panel content sections
+        const dashboardContent = document.getElementById('dashboardContent');
+        const createNewsContent = document.getElementById('createNewsContent');
+        const manageNewsContent = document.getElementById('manageNewsContent');
+        const analyticsContent = document.getElementById('analyticsContent');
+        const settingsContent = document.getElementById('settingsContent');
+        
+        // News form elements
+        const newsForm = document.getElementById('newsForm');
+        const newsImages = document.getElementById('newsImages');
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+        const paragraphsContainer = document.getElementById('paragraphsContainer');
+        const addParagraphBtn = document.getElementById('addParagraphBtn');
+        const previewBtn = document.getElementById('previewBtn');
+        const previewModal = document.getElementById('previewModal');
+        const closePreviewModal = document.getElementById('closePreviewModal');
+        const previewContent = document.getElementById('previewContent');
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            renderNewsCards();
+            renderNewsTable();
+            updateNewsCount();
+            
+            // Set up event listeners
+            adminLoginBtn.addEventListener('click', showAdminLoginModal);
+            closeLoginModal.addEventListener('click', hideAdminLoginModal);
+            loginForm.addEventListener('submit', handleLogin);
+            logoutBtn.addEventListener('click', handleLogout);
+            mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            
+            // Admin panel tab switching
+            dashboardTab.addEventListener('click', () => switchTab('dashboard'));
+            createNewsTab.addEventListener('click', () => switchTab('createNews'));
+            manageNewsTab.addEventListener('click', () => switchTab('manageNews'));
+            analyticsTab.addEventListener('click', () => switchTab('analytics'));
+            settingsTab.addEventListener('click', () => switchTab('settings'));
+            
+            // News form functionality
+            newsImages.addEventListener('change', handleImageUpload);
+            addParagraphBtn.addEventListener('click', addParagraphField);
+            newsForm.addEventListener('submit', publishNews);
+            previewBtn.addEventListener('click', showPreview);
+            closePreviewModal.addEventListener('click', hidePreview);
+        });
+
+        // Render news cards for the user view
+        function renderNewsCards() {
+            newsContainer.innerHTML = '';
+            
+            newsData.forEach((news, index) => {
+                const newsCard = document.createElement('div');
+                newsCard.className = 'news-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition';
+                
+                let imagesHTML = '';
+                if (news.images.length > 0) {
+                    imagesHTML = `
+                        <div class="relative h-48 overflow-hidden">
+                            <img src="${news.images[0]}" alt="${news.title}" class="news-image w-full h-full object-cover">
+                        </div>
+                    `;
+                }
+                
+                let courseLinkHTML = '';
+                if (news.courseLink && news.linkText) {
+                    courseLinkHTML = `
+                        <div class="mt-4">
+                            <a href="${news.courseLink}" target="_blank" class="inline-block bg-indigo-700 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition">
+                                ${news.linkText}
+                            </a>
+                        </div>
+                    `;
+                }
+                
+                newsCard.innerHTML = `
+                    ${imagesHTML}
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-xl font-bold text-gray-800">${news.title}</h3>
+                            <span class="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded-full capitalize">${news.category}</span>
+                        </div>
+                        <p class="text-gray-600 mb-4">${news.paragraphs[0].substring(0, 150)}...</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-500">${formatDate(news.date)}</span>
+                            <a href="#" class="text-indigo-700 hover:text-indigo-500 font-medium" onclick="viewNewsDetails(${news.id})">Read More</a>
+                        </div>
+                        ${courseLinkHTML}
+                    </div>
+                `;
+                
+                newsContainer.appendChild(newsCard);
+            });
+        }
+
+        // Render news table for admin panel
+        function renderNewsTable() {
+            newsTableBody.innerHTML = '';
+            
+            newsData.forEach(news => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-200 hover:bg-gray-50';
+                
+                row.innerHTML = `
+                    <td class="py-3 px-4">${news.title}</td>
+                    <td class="py-3 px-4 capitalize">${news.category}</td>
+                    <td class="py-3 px-4">${formatDate(news.date)}</td>
+                    <td class="py-3 px-4">
+                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Published</span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <button class="text-indigo-700 hover:text-indigo-500 mr-3" onclick="editNews(${news.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="text-red-700 hover:text-red-500" onclick="deleteNews(${news.id})">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+                
+                newsTableBody.appendChild(row);
+            });
+        }
+
+        // Update news count in dashboard
+        function updateNewsCount() {
+            totalNewsCount.textContent = newsData.length;
+        }
+
+        // Format date for display
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        }
+
+        // Show admin login modal
+        function showAdminLoginModal() {
+            adminLoginModal.classList.remove('hidden');
+        }
+
+        // Hide admin login modal
+        function hideAdminLoginModal() {
+            adminLoginModal.classList.add('hidden');
+        }
+
+        // Handle login form submission
+        function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // Simple validation
+            if (username === 'admin' && password === 'password123') {
+                // Successful login
+                adminPanel.classList.add('active');
+                userView.classList.add('hidden');
+                adminLoginBtn.classList.add('hidden');
+                logoutBtn.classList.remove('hidden');
+                hideAdminLoginModal();
+                
+                // Reset form
+                loginForm.reset();
+                
+                // Show dashboard by default
+                switchTab('dashboard');
+            } else {
+                alert('Invalid credentials. Try admin/password123');
+            }
+        }
+
+        // Handle logout
+        function handleLogout() {
+            adminPanel.classList.remove('active');
+            userView.classList.remove('hidden');
+            adminLoginBtn.classList.remove('hidden');
+            logoutBtn.classList.add('hidden');
+        }
+
+        // Toggle mobile menu
+        function toggleMobileMenu() {
+            mobileMenu.classList.toggle('hidden');
+        }
+
+        // Switch between admin panel tabs
+        function switchTab(tabName) {
+            // Hide all content sections
+            dashboardContent.classList.add('hidden');
+            createNewsContent.classList.add('hidden');
+            manageNewsContent.classList.add('hidden');
+            analyticsContent.classList.add('hidden');
+            settingsContent.classList.add('hidden');
+            
+            // Reset all tab styles
+            dashboardTab.className = 'w-full text-left px-4 py-2 hover:bg-gray-100 rounded-lg transition';
+            createNewsTab.className = 'w-full text-left px-4 py-2 hover:bg-gray-100 rounded-lg transition';
+            manageNewsTab.className = 'w-full text-left px-4 py-2 hover:bg-gray-100 rounded-lg transition';
+            analyticsTab.className = 'w-full text-left px-4 py-2 hover:bg-gray-100 rounded-lg transition';
+            settingsTab.className = 'w-full text-left px-4 py-2 hover:bg-gray-100 rounded-lg transition';
+            
+            // Show selected content and update tab style
+            switch(tabName) {
+                case 'dashboard':
+                    dashboardContent.classList.remove('hidden');
+                    dashboardTab.className = 'w-full text-left px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg font-medium tab-active';
+                    break;
+                case 'createNews':
+                    createNewsContent.classList.remove('hidden');
+                    createNewsTab.className = 'w-full text-left px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg font-medium tab-active';
+                    break;
+                case 'manageNews':
+                    manageNewsContent.classList.remove('hidden');
+                    manageNewsTab.className = 'w-full text-left px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg font-medium tab-active';
+                    renderNewsTable();
+                    break;
+                case 'analytics':
+                    analyticsContent.classList.remove('hidden');
+                    analyticsTab.className = 'w-full text-left px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg font-medium tab-active';
+                    break;
+                case 'settings':
+                    settingsContent.classList.remove('hidden');
+                    settingsTab.className = 'w-full text-left px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg font-medium tab-active';
+                    break;
+            }
+        }
+
+        // Handle image upload for news article
+        function handleImageUpload(e) {
+            const files = e.target.files;
+            imagePreviewContainer.innerHTML = '';
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const previewDiv = document.createElement('div');
+                    previewDiv.className = 'relative';
+                    
+                    previewDiv.innerHTML = `
+                        <img src="${e.target.result}" class="preview-image">
+                        <span class="remove-image" onclick="removeImage(this)">&times;</span>
+                    `;
+                    
+                    imagePreviewContainer.appendChild(previewDiv);
+                };
+                
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Remove image from preview
+        function removeImage(element) {
+            element.parentElement.remove();
+        }
+
+        // Add paragraph field to news form
+        function addParagraphField() {
+            const paragraphContainer = document.createElement('div');
+            paragraphContainer.className = 'paragraph-container';
+            
+            paragraphContainer.innerHTML = `
+                <textarea class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-2" placeholder="Write a paragraph..."></textarea>
+                <span class="remove-paragraph" onclick="removeParagraph(this)">&times;</span>
+            `;
+            
+            paragraphsContainer.appendChild(paragraphContainer);
+        }
+
+        // Remove paragraph field from news form
+        function removeParagraph(element) {
+            element.parentElement.remove();
+        }
+
+        // Show preview of news article
+        function showPreview() {
+            const title = document.getElementById('newsTitle').value;
+            const category = document.getElementById('newsCategory').value;
+            const courseLink = document.getElementById('courseLink').value;
+            const linkText = document.getElementById('linkText').value;
+            
+            // Get all images from preview container
+            const imagePreviews = imagePreviewContainer.querySelectorAll('img');
+            const images = Array.from(imagePreviews).map(img => img.src);
+            
+            // Get all paragraphs
+            const textareas = paragraphsContainer.querySelectorAll('textarea');
+            const paragraphs = Array.from(textareas).map(ta => ta.value).filter(p => p.trim() !== '');
+            
+            // Build preview HTML
+            let previewHTML = '';
+            
+            if (title) {
+                previewHTML += `<h1 class="text-3xl font-bold mb-4">${title}</h1>`;
+            }
+            
+            if (category) {
+                previewHTML += `<p class="text-indigo-700 font-medium mb-6">${category.charAt(0).toUpperCase() + category.slice(1)}</p>`;
+            }
+            
+            if (images.length > 0) {
+                previewHTML += `<div class="mb-6">`;
+                images.forEach((img, index) => {
+                    if (index === 0) {
+                        previewHTML += `<img src="${img}" class="w-full h-auto rounded-lg mb-4">`;
+                    } else {
+                        previewHTML += `<img src="${img}" class="w-1/2 h-auto rounded-lg inline-block mr-2 mb-2">`;
+                    }
+                });
+                previewHTML += `</div>`;
+            }
+            
+            if (paragraphs.length > 0) {
+                paragraphs.forEach(p => {
+                    previewHTML += `<p class="mb-4">${p}</p>`;
+                });
+            }
+            
+            if (courseLink && linkText) {
+                previewHTML += `
+                    <div class="mt-6">
+                        <a href="${courseLink}" target="_blank" class="inline-block bg-indigo-700 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition">
+                            ${linkText}
+                        </a>
+                    </div>
+                `;
+            }
+            
+            previewContent.innerHTML = previewHTML;
+            previewModal.classList.remove('hidden');
+        }
+
+        // Hide preview modal
+        function hidePreview() {
+            previewModal.classList.add('hidden');
+        }
+
+        // Publish new news article
+        function publishNews(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('newsTitle').value;
+            const category = document.getElementById('newsCategory').value;
+            const courseLink = document.getElementById('courseLink').value;
+            const linkText = document.getElementById('linkText').value;
+            
+            // Get all images from preview container
+            const imagePreviews = imagePreviewContainer.querySelectorAll('img');
+            const images = Array.from(imagePreviews).map(img => img.src);
+            
+            // Get all paragraphs
+            const textareas = paragraphsContainer.querySelectorAll('textarea');
+            const paragraphs = Array.from(textareas).map(ta => ta.value).filter(p => p.trim() !== '');
+            
+            // Validate form
+            if (!title || paragraphs.length === 0) {
+                alert('Please fill in all required fields (title and at least one paragraph)');
+                return;
+            }
+            
+            // Create new news object
+            const newNews = {
+                id: newsData.length + 1,
+                title,
+                category,
+                date: new Date().toISOString().split('T')[0],
+                images,
+                paragraphs,
+                courseLink,
+                linkText
+            };
+            
+            // Add to news data
+            newsData.unshift(newNews);
+            
+            // Reset form
+            newsForm.reset();
+            imagePreviewContainer.innerHTML = '';
+            paragraphsContainer.innerHTML = `
+                <div class="paragraph-container">
+                    <textarea class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-2" placeholder="Write a paragraph..."></textarea>
+                </div>
+            `;
+            
+            // Show success message
+            alert('News article published successfully!');
+            
+            // Update news display
+            renderNewsCards();
+            renderNewsTable();
+            updateNewsCount();
+            
+            // Switch to manage news tab
+            switchTab('manageNews');
+        }
+
+        // Edit news article
+        function editNews(id) {
+            const news = newsData.find(item => item.id === id);
+            if (news) {
+                // Fill the form with news data
+                document.getElementById('newsTitle').value = news.title;
+                document.getElementById('newsCategory').value = news.category;
+                document.getElementById('courseLink').value = news.courseLink;
+                document.getElementById('linkText').value = news.linkText;
+                
+                // Clear existing paragraphs and images
+                paragraphsContainer.innerHTML = '';
+                imagePreviewContainer.innerHTML = '';
+                
+                // Add paragraphs
+                news.paragraphs.forEach((p, index) => {
+                    const paragraphContainer = document.createElement('div');
+                    paragraphContainer.className = 'paragraph-container';
+                    
+                    paragraphContainer.innerHTML = `
+                        <textarea class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-2" placeholder="Write a paragraph...">${p}</textarea>
+                        ${index > 0 ? '<span class="remove-paragraph" onclick="removeParagraph(this)">&times;</span>' : ''}
+                    `;
+                    
+                    paragraphsContainer.appendChild(paragraphContainer);
+                });
+                
+                // Add images
+                news.images.forEach(img => {
+                    const previewDiv = document.createElement('div');
+                    previewDiv.className = 'relative';
+                    
+                    previewDiv.innerHTML = `
+                        <img src="${img}" class="preview-image">
+                        <span class="remove-image" onclick="removeImage(this)">&times;</span>
+                    `;
+                    
+                    imagePreviewContainer.appendChild(previewDiv);
+                });
+                
+                // Switch to create news tab
+                switchTab('createNews');
+                
+                // Scroll to top
+                window.scrollTo(0, 0);
+            }
+        }
+
+        // Delete news article
+        function deleteNews(id) {
+            if (confirm('Are you sure you want to delete this news article?')) {
+                const index = newsData.findIndex(news => news.id === id);
+                if (index !== -1) {
+                    newsData.splice(index, 1);
+                    renderNewsCards();
+                    renderNewsTable();
+                    updateNewsCount();
+                    alert('News article deleted successfully!');
+                }
+            }
+        }
+
+        // View news details
+        function viewNewsDetails(id) {
+            const news = newsData.find(item => item.id === id);
+            if (news) {
+                let contentHTML = `
+                    <h1 class="text-3xl font-bold mb-4">${news.title}</h1>
+                    <div class="flex items-center mb-6">
+                        <span class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full capitalize mr-4">${news.category}</span>
+                        <span class="text-gray-600">${formatDate(news.date)}</span>
+                    </div>
+                `;
+                
+                if (news.images.length > 0) {
+                    contentHTML += `<div class="mb-6">`;
+                    news.images.forEach(img => {
+                        contentHTML += `<img src="${img}" class="w-full h-auto rounded-lg mb-4">`;
+                    });
+                    contentHTML += `</div>`;
+                }
+                
+                news.paragraphs.forEach(p => {
+                    contentHTML += `<p class="mb-4">${p}</p>`;
+                });
+                
+                if (news.courseLink && news.linkText) {
+                    contentHTML += `
+                        <div class="mt-6">
+                            <a href="${news.courseLink}" target="_blank" class="inline-block bg-indigo-700 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition">
+                                ${news.linkText}
+                            </a>
+                        </div>
+                    `;
+                }
+                
+                previewContent.innerHTML = contentHTML;
+                previewModal.classList.remove('hidden');
+            }
+        }
+
+        // Make functions available globally for inline event handlers
+        window.removeImage = removeImage;
+        window.removeParagraph = removeParagraph;
+        window.editNews = editNews;
+        window.deleteNews = deleteNews;
+        window.viewNewsDetails = viewNewsDetails;
+    </script>
+</body>
+</html>
